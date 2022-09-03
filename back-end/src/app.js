@@ -2,9 +2,8 @@ import express from "express";
 import cors from "cors";
 import dayjs from "dayjs";
 
-import { participants, messages } from "./dataservise.js";
+import {messages, findParticipants, updateLastStatus } from "./dataservise.js";
 import { 
-    checkParticipants, 
     validateMassage, 
     validateUser 
 } from "./validations.js";
@@ -19,7 +18,7 @@ let listParticipants = [];
 //Partipants
 app.get("/participants", async (req, res) => {
     try {
-        listParticipants = await participants();
+        listParticipants = await findParticipants({});
         res.send(listParticipants);
     } catch (error) {
         console.log(error);
@@ -28,24 +27,30 @@ app.get("/participants", async (req, res) => {
 });
 
 app.post("/participants", async (req, res) => {
-    const name = req.body;
+    const {name} = req.body;
 
     if (validateUser(name, res)) return;
 
     try {
-        listParticipants = await participants();
-        if (checkParticipants(listParticipants, name)) {
+        const check = await findParticipants({user:name});
+        if (check) {
             res.sendStatus(409);
             return;
         }
         let userInsert = {
-            ...name,
-            "lastStatus:": dayjs(Date.now()).format("HH:mm:ss"),
+            name: name,
+            lastStatus: Date.now(),
+        };
+        await findParticipants({post:userInsert});
+
+        let userInsertMassage = {
+            from:name,
+            time: dayjs(Date.now()).format("HH:mm:ss"),
             to: "Todos",
             text: "entra na sala...",
             type: "status",
-        };
-        await participants(userInsert);
+        }
+        await messages(userInsertMassage)
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -55,27 +60,89 @@ app.post("/participants", async (req, res) => {
 
 //Messages
 app.get("/messages", async (req, res) => {
+    const {limit} = req.query
     try {
         let listMessages = await messages();
-        res.send(listMessages);
+        if(limit){
+            let listWithLimit = listMessages.slice(limit*-1)
+            res.status(200).send(listWithLimit)
+            return
+        }
+        res.status(200).send(listMessages);
     } catch (error) {
         console.log(error);
         res.sendStatus(500);
     }
 });
 
-app.post("/messages", (req, res) => {
-    const message = req.body
+app.post("/messages", async (req, res) => {
     const {user} = req.headers
-    console.log(message,user)
+    const {to, text, type} = req.body
+    const message = {
+        to:to,
+        text: text,
+        type:type
+    }
+
     if(validateMassage(message, res)) return
 
-    res.sendStatus(200);
+    try {
+        const check = await findParticipants({user:user})
+        if (!check) {
+            res.sendStatus(404);
+            return;
+        }
+        let messageInsert = {
+            from:user, 
+            ...message,
+            time: dayjs(Date.now()).format("HH:mm:ss")
+        }
+        await messages(messageInsert)
+        res.sendStatus(201);
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
 });
 
 //Stauts
-app.post("/status", (req, res) => {
-    res.send(participants);
+app.post("/status", async (req, res) => {
+    const {user} = req.headers
+
+    try {
+        const participant = await findParticipants({user:user})
+        if(!participant){
+            return res.sendStatus(404)
+        }
+        await updateLastStatus(participant._id, {
+            _id:participant._id,
+            name:participant.name,
+            lastStatus: Date.now()
+        })
+        res.sendStatus(200)
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    } 
 });
+
+setInterval(async()=>{
+    const participantsStatus = await findParticipants({})
+    participantsStatus.map(async (value)=>{
+        if(value.lastStatus < Date.now() - 10000){
+            await findParticipants({remove:value._id})
+            let userInsertMassage = {
+                from:value.name,
+                time: dayjs(Date.now()).format("HH:mm:ss"),
+                to: "Todos",
+                text: "saiu na sala...",
+                type: "status",
+            }
+            await messages(userInsertMassage)
+        }
+    })
+},15000)
+
+
 
 app.listen(5000, () => console.log("listen on port 5000"));
