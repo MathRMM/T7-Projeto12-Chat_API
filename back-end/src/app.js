@@ -17,7 +17,14 @@ let listParticipants = [];
 
 //Partipants
 app.get("/participants", async (req, res) => {
+    const {user} = req.headers
+
     try {
+        const check = await findParticipants({user:user})
+        if (!check) {
+            res.sendStatus(404);
+            return;
+        }
         listParticipants = await findParticipants({});
         res.send(listParticipants);
     } catch (error) {
@@ -61,14 +68,28 @@ app.post("/participants", async (req, res) => {
 //Messages
 app.get("/messages", async (req, res) => {
     const {limit} = req.query
+    const {user} =req.headers
     try {
+        /* const check = await findParticipants({user:user})
+        if (!check) {
+            res.sendStatus(404);
+            return;
+        } */
         let listMessages = await messages();
+        let filteredList = listMessages.filter((message)=>{
+            if(message.type !== 'private_message' ||
+            message.to === user ||
+            message.from === user){
+                return message
+            }})
+            console.log(filteredList)
+        
         if(limit){
-            let listWithLimit = listMessages.slice(limit*-1)
+            let listWithLimit = filteredList.slice(limit*-1)
             res.status(200).send(listWithLimit)
             return
         }
-        res.status(200).send(listMessages);
+        res.status(200).send(filteredList);
     } catch (error) {
         console.log(error);
         res.sendStatus(500);

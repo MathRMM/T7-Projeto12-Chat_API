@@ -1,6 +1,5 @@
 import joi from 'joi'
 
-
 const validateUser = function (name,res){
     const user = {name:name}
     const userSchema = joi.object({
