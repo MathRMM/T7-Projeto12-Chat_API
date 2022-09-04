@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dayjs from "dayjs";
 import { strict as assert } from "assert";
-import {stripHTML} from 'string-strip-html'
+import {stripHtml} from 'string-strip-html'
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -200,7 +200,7 @@ app.post("/status", async (req, res) => {
     }
 });
 
-/* setInterval(async () => {
+setInterval(async () => {
     const participantsStatus = await findParticipants({})
     participantsStatus.map(async (value) => {
         if (value.lastStatus < Date.now() - 10000) {
@@ -215,7 +215,7 @@ app.post("/status", async (req, res) => {
             await messages(userInsertMassage)
         }
     })
-}, 15000) */
+}, 15000)
 
 const PORT = process.env.PORT || 5000
 
