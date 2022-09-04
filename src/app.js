@@ -1,10 +1,12 @@
 import express from "express";
 import cors from "cors";
 import dayjs from "dayjs";
+import { strict as assert } from "assert";
+import {stripHTML} from 'string-strip-html'
 import dotenv from "dotenv";
 dotenv.config();
 
-import { messages, findParticipants, updateLastStatus, deleteMessage } from "./dataservise.js";
+import { messages, findParticipants, updateLastStatus, deleteMessage, updateMessage } from "./dataservise.js";
 import {
     validateMassage,
     validateUser
@@ -151,6 +153,31 @@ app.delete("/messages/:id", async (req, res) => {
     }
 })
 
+app.put("/messages/:id", async (req, res) => {
+    const { user } = req.headers
+    const {id} = req.params
+    const { to, text, type } = req.body
+    if (!user || !to || !text || !type || !id) return res.sendStatus(400)
+
+    const message = {
+        to: to,
+        text: text,
+        type: type
+    }
+
+    if (validateMassage(message, res)) return
+
+    try {
+        const check = await findParticipants({user:user})
+        if(!check) return res.sendStatus(404)
+        const a = await updateMessage(id, message)
+        console.log(a)
+        res.sendStatus(200)
+    } catch (error) {
+        
+    }
+})
+
 //Stauts
 app.post("/status", async (req, res) => {
     const { user } = req.headers
@@ -173,7 +200,7 @@ app.post("/status", async (req, res) => {
     }
 });
 
-setInterval(async () => {
+/* setInterval(async () => {
     const participantsStatus = await findParticipants({})
     participantsStatus.map(async (value) => {
         if (value.lastStatus < Date.now() - 10000) {
@@ -188,7 +215,7 @@ setInterval(async () => {
             await messages(userInsertMassage)
         }
     })
-}, 15000)
+}, 15000) */
 
 const PORT = process.env.PORT || 5000
 

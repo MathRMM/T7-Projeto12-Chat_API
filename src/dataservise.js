@@ -49,7 +49,13 @@ const messages = async (post) => {
 }
 
 const deleteMessage = async (id)=>{
-    return db.collection('messages').deleteOne({_id: ObjectId(id)})
+    return await db.collection('messages').deleteOne({_id: ObjectId(id)})
+}
+
+const updateMessage = async (id, newMessage)=>{
+    return await db.collection('messages').updateOne(
+        {_id: ObjectId(id)},
+        {$set: newMessage})
 }
 
 
@@ -57,5 +63,6 @@ export {
     messages, 
     findParticipants, 
     updateLastStatus,
-    deleteMessage 
+    deleteMessage,
+    updateMessage
 }
