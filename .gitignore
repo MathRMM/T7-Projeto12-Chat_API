@@ -1,10 +1,9 @@
 
 # dependencies
-/back-end/node_modules
+node_modules
 
 # misc
 .wakatime-project
-/front-end
 .env
 
 npm-debug.log*
