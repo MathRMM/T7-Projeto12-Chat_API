@@ -48,5 +48,14 @@ const messages = async (post) => {
     }
 }
 
+const deleteMessage = async (id)=>{
+    return db.collection('messages').deleteOne({_id: ObjectId(id)})
+}
 
-export { messages, findParticipants, updateLastStatus }
+
+export { 
+    messages, 
+    findParticipants, 
+    updateLastStatus,
+    deleteMessage 
+}
