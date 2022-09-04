@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dayjs from "dayjs";
+import dotenv from "dotenv";
+dotenv.config();
 
 import {messages, findParticipants, updateLastStatus } from "./dataservise.js";
 import { 
@@ -82,7 +84,6 @@ app.get("/messages", async (req, res) => {
             message.from === user){
                 return message
             }})
-            console.log(filteredList)
         
         if(limit){
             let listWithLimit = filteredList.slice(limit*-1)
@@ -164,6 +165,6 @@ setInterval(async()=>{
     })
 },15000)
 
+const PORT = process.env.PORT || 5000
 
-
-app.listen(5000, () => console.log("listen on port 5000"));
+app.listen(PORT, () => console.log(`listen on port ${PORT}`));
