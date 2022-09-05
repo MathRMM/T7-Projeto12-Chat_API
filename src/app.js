@@ -126,7 +126,7 @@ app.post("/messages", async (req, res) => {
         await messages({
             from: user,
             ...message,
-            time: dayjs(Date.now()).locale('br').format("HH:mm:ss")
+            time: dayjs().locale('br').format("HH:mm:ss")
         })
         res.sendStatus(201);
     } catch (error) {
