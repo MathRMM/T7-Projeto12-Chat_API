@@ -57,7 +57,7 @@ app.post("/participants", async (req, res) => {
 
         let userInsertMassage = {
             from: name,
-            time: dayjs(Date.now()).locale('br').format("HH:mm:ss"),
+            time: dayjs().locale('br').format("HH:mm:ss"),
             to: "Todos",
             text: "entra na sala...",
             type: "status",
@@ -188,7 +188,7 @@ app.post("/status", async (req, res) => {
         await updateLastStatus(participant._id, {
             _id: participant._id,
             name: participant.name,
-            lastStatus: dayjs(Date.now()).locale('br')
+            lastStatus: Date.now()
         })
         res.sendStatus(200)
     } catch (error) {
