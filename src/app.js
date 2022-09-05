@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dayjs from "dayjs";
-import { strict as assert } from "assert";
+import dayjs  from "dayjs";
 import {stripHtml} from 'string-strip-html'
 import dotenv from "dotenv";
 dotenv.config();
@@ -25,7 +24,7 @@ app.get("/participants", async (req, res) => {
     if (!user) return res.sendStatus(400)
 
     try {
-        const check = await findParticipants({ user: user })
+        const check = await findParticipants({ user: stripHtml(user).result })
         if (!check) {
             res.sendStatus(404);
             return;
@@ -58,7 +57,7 @@ app.post("/participants", async (req, res) => {
 
         let userInsertMassage = {
             from: name,
-            time: dayjs(Date.now()).format("HH:mm:ss"),
+            time: dayjs(Date.now()).locale('br').format("HH:mm:ss"),
             to: "Todos",
             text: "entra na sala...",
             type: "status",
@@ -111,8 +110,8 @@ app.post("/messages", async (req, res) => {
     if (!user || !to || !text || !type) return res.sendStatus(400)
 
     const message = {
-        to: to,
-        text: text,
+        to: stripHtml(to).result,
+        text: stripHtml(text).result,
         type: type
     }
 
@@ -124,12 +123,11 @@ app.post("/messages", async (req, res) => {
             res.sendStatus(404);
             return;
         }
-        let messageInsert = {
+        await messages({
             from: user,
             ...message,
-            time: dayjs(Date.now()).format("HH:mm:ss")
-        }
-        await messages(messageInsert)
+            time: dayjs(Date.now()).locale('br').format("HH:mm:ss")
+        })
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -171,7 +169,6 @@ app.put("/messages/:id", async (req, res) => {
         const check = await findParticipants({user:user})
         if(!check) return res.sendStatus(404)
         const a = await updateMessage(id, message)
-        console.log(a)
         res.sendStatus(200)
     } catch (error) {
         
@@ -191,7 +188,7 @@ app.post("/status", async (req, res) => {
         await updateLastStatus(participant._id, {
             _id: participant._id,
             name: participant.name,
-            lastStatus: Date.now()
+            lastStatus: dayjs(Date.now()).locale('br')
         })
         res.sendStatus(200)
     } catch (error) {
@@ -205,14 +202,13 @@ setInterval(async () => {
     participantsStatus.map(async (value) => {
         if (value.lastStatus < Date.now() - 10000) {
             await findParticipants({ remove: value._id })
-            let userInsertMassage = {
+            await messages({
                 from: value.name,
-                time: dayjs(Date.now()).format("HH:mm:ss"),
+                time: dayjs(Date.now()).locale('br').format("HH:mm:ss"),
                 to: "Todos",
                 text: "saiu na sala...",
                 type: "status",
-            }
-            await messages(userInsertMassage)
+            })
         }
     })
 }, 15000)
