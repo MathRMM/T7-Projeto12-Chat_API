@@ -24,7 +24,7 @@ app.get("/participants", async (req, res) => {
     if (!user) return res.sendStatus(400)
 
     try {
-        const check = await findParticipants({ user: stripHtml(user).result })
+        const check = await findParticipants({ user: user })
         if (!check) {
             res.sendStatus(404);
             return;
@@ -44,7 +44,7 @@ app.post("/participants", async (req, res) => {
     if (validateUser(name, res)) return;
 
     try {
-        const check = await findParticipants({ user: name });
+        const check = await findParticipants({ user: (stripHtml(name).result).trim() });
         if (check) {
             res.sendStatus(409);
             return;
@@ -110,8 +110,8 @@ app.post("/messages", async (req, res) => {
     if (!user || !to || !text || !type) return res.sendStatus(400)
 
     const message = {
-        to: stripHtml(to).result,
-        text: stripHtml(text).result,
+        to: (stripHtml(to).result).trim(),
+        text: (stripHtml(text).result).trim(),
         type: type
     }
 
