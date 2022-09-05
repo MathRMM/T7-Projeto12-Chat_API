@@ -204,7 +204,7 @@ setInterval(async () => {
             await findParticipants({ remove: value._id })
             await messages({
                 from: value.name,
-                time: dayjs(Date.now()).locale('br').format("HH:mm:ss"),
+                time: dayjs().locale('br').format("HH:mm:ss"),
                 to: "Todos",
                 text: "saiu na sala...",
                 type: "status",
